@@ -11,6 +11,7 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -18,7 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
@@ -45,11 +46,11 @@ export class AuthController {
     private readonly usersService: UsersService,
   ) { }
 
-@Get()
-@UseGuards(JwtAuthGuard)
-async getUsers() {
-  return this.usersService.findAll();
-}
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async getUsers() {
+    return this.usersService.findAll();
+  }
 
   // =========================================================
   // GET CURRENT USER
@@ -162,26 +163,28 @@ async getUsers() {
   // POST /api/v1/auth/refresh
   // =========================================================
 
-  @UseGuards(JwtRefreshGuard)
   @Post('refresh')
-  @HttpCode(HttpStatus.OK)
   async refresh(
     @Req()
     req: Request & {
-      user: {
+      user?: {
         sub: string;
         refreshToken: string;
       };
     },
-
-    @Res({ passthrough: true })
-    res: Response,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    const result =
-      await this.authService.refresh(
-        req.user.sub,
-        req.user.refreshToken,
-      );
+    if (!req.user?.sub || !req.user?.refreshToken) {
+      throw new UnauthorizedException();
+    }
+
+    const userId = req.user.sub;
+    const refreshToken = req.user.refreshToken;
+
+    const result = await this.authService.refresh(
+      userId,
+      refreshToken,
+    );
 
     this.setAccessTokenCookie(
       res,
@@ -206,16 +209,15 @@ async getUsers() {
     req: Request & {
       user: {
         sub: string;
+        role?: string;
+        email?: string;
       };
     },
-
-    @Res({ passthrough: true })
-    res: Response,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    const result =
-      await this.authService.logout(
-        req.user.sub,
-      );
+    const result = await this.authService.logout(
+      req.user.sub,
+    );
 
     this.clearAuthCookies(res);
 

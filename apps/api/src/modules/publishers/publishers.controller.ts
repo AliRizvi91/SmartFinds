@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 import { PublishersService } from './publishers.service';
 import { CreatePublisherDto } from './dto/create-publisher.dto';
@@ -31,16 +31,20 @@ export class PublishersController {
 
   @Post()
   create(
-    @Req() req: Request,
+    @Req()
+    req: Request & {
+      user: {
+        sub: string;
+        role?: string;
+        email?: string;
+      };
+    },
     @Body() dto: CreatePublisherDto,
   ) {
-    const user = req.user as {
-      sub: string;
-      role: string;
-      email: string;
-    };
-
-    return this.publishersService.create(user.sub, dto);
+    return this.publishersService.create(
+      req.user.sub,
+      dto,
+    );
   }
 
   @Get()

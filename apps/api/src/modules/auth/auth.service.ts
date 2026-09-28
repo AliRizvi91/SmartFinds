@@ -65,7 +65,7 @@ export class AuthService {
     ).toString();
   }
 
-  
+
 
   async register(
     dto: RegisterDto,
@@ -1020,20 +1020,18 @@ export class AuthService {
       type: 'access',
     };
 
-    return this.jwtService.sign(
-      payload,
-      {
-        secret:
-          this.configService.get<string>(
-            'jwt.accessSecret',
-          ),
+    const expiresIn =
+      this.configService.get<string>(
+        'jwt.accessExpiresIn',
+      );
 
-        expiresIn:
-          this.configService.get(
-            'jwt.accessExpiresIn',
-          ),
-      },
-    );
+    return this.jwtService.sign(payload, {
+      secret: this.configService.getOrThrow<string>(
+        'jwt.accessSecret',
+      ),
+      expiresIn: expiresIn as `${number}${'s' | 'm' | 'h' | 'd'}`,
+    });
+    
   }
 
   // =========================================================
