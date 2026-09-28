@@ -6,7 +6,8 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+
+import type { Request, Response } from 'express';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -14,39 +15,51 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
+
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const isHttp = exception instanceof HttpException;
-    const status = isHttp
-      ? (exception as HttpException).getStatus()
+    const isHttpException = exception instanceof HttpException;
+
+    const status = isHttpException
+      ? exception.getStatus()
       : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const exceptionResponse = isHttp
-      ? (exception as HttpException).getResponse()
+    const exceptionResponse = isHttpException
+      ? exception.getResponse()
       : undefined;
 
     const message =
       typeof exceptionResponse === 'string'
         ? exceptionResponse
-        : (exceptionResponse as any)?.message ??
-          (exception as Error)?.message ??
-          'Something went wrong';
+        : (exceptionResponse as { message?: string | string[] } | undefined)
+            ?.message ??
+          (exception instanceof Error
+            ? exception.message
+            : 'Something went wrong');
 
     const errorCode =
-      (exceptionResponse as any)?.error ??
-      (isHttp ? (exception as HttpException).name : 'INTERNAL_SERVER_ERROR');
+      (typeof exceptionResponse === 'object' &&
+      exceptionResponse !== null &&
+      'error' in exceptionResponse
+        ? (exceptionResponse as { error?: string }).error
+        : undefined) ??
+      (isHttpException
+        ? exception.name
+        : 'INTERNAL_SERVER_ERROR');
 
-    if (!isHttp) {
+    if (!isHttpException) {
       this.logger.error(
         `Unhandled exception on ${request.method} ${request.url}`,
-        (exception as Error)?.stack,
+        exception instanceof Error ? exception.stack : undefined,
       );
     }
 
     response.status(status).json({
       success: false,
-      message: Array.isArray(message) ? message.join(', ') : message,
+      message: Array.isArray(message)
+        ? message.join(', ')
+        : message,
       error: errorCode,
     });
   }

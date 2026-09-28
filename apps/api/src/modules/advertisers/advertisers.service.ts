@@ -24,44 +24,46 @@ export class AdvertisersService {
     private readonly advertiserModel: Model<AdvertiserDocument>,
   ) {}
 
-  async create(
-    userId: string,
-    dto: CreateAdvertiserDto,
-  ) {
-    // Make sure the authenticated user ID is valid
-    if (!Types.ObjectId.isValid(userId)) {
-      throw new ConflictException(
-        'Invalid authenticated user ID',
-      );
-    }
-
-    // Prevent duplicate advertiser profiles
-    const existingAdvertiser =
-      await this.advertiserModel.findOne({
-        userId: new Types.ObjectId(userId),
-      });
-
-    if (existingAdvertiser) {
-      throw new ConflictException(
-        'Advertiser profile already exists for this account',
-      );
-    }
-
-    const advertiser =
-      await this.advertiserModel.create({
-        userId: new Types.ObjectId(userId),
-        companyName: dto.companyName,
-        website: dto.website,
-        industry: dto.industry,
-      });
-
-    return {
-      success: true,
-      data: advertiser,
-      message: 'Advertiser account created successfully',
-    };
+async create(
+  userId: string,
+  dto: CreateAdvertiserDto,
+) {
+  // Validate authenticated user ID
+  if (!Types.ObjectId.isValid(userId)) {
+    throw new ConflictException(
+      'Invalid authenticated user ID',
+    );
   }
 
+  const userObjectId = new Types.ObjectId(userId);
+
+  // Prevent duplicate advertiser profiles
+  const existingAdvertiser =
+    await this.advertiserModel.findOne({
+      userId: userObjectId,
+    });
+
+  if (existingAdvertiser) {
+    throw new ConflictException(
+      'Advertiser profile already exists for this account',
+    );
+  }
+
+  // Create advertiser profile
+  const advertiser =
+    await this.advertiserModel.create({
+      userId: userObjectId,
+      companyName: dto.companyName,
+      website: dto.website,
+      industry: dto.industry,
+    });
+
+  return {
+    success: true,
+    data: advertiser,
+    message: 'Advertiser account created successfully',
+  };
+}
 
   // =====================================================
   // GET ALL ADVERTISERS
