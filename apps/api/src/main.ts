@@ -24,17 +24,23 @@ export async function createApp() {
     credentials: true,
   });
 
-  const apiPrefix =
-    config.get<string>('apiPrefix') || 'api';
+  // const apiPrefix =
+  //   config.get<string>('apiPrefix') || 'api';
 
-  app.setGlobalPrefix(apiPrefix);
+  // app.setGlobalPrefix(apiPrefix);
 
-  const apiVersion =
-    config.get<string>('apiVersion') || 'v1';
+  app.setGlobalPrefix('api');
+  // const apiVersion =
+  //   config.get<string>('apiVersion') || 'v1';
+ 
+  // app.enableVersioning({
+  //   type: VersioningType.URI,
+  //   defaultVersion: apiVersion,
+  // });
 
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: apiVersion,
+    defaultVersion: 'v1',
   });
 
   app.useGlobalPipes(
