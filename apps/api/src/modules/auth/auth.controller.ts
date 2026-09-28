@@ -31,7 +31,6 @@ import { ResendLoginOtpDto, ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyLoginOtpDto, VerifyEmailDto } from './dto/verify-email.dto';
 
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
