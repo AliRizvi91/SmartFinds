@@ -2,11 +2,16 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
+import {
+  APP_FILTER,
+  APP_GUARD,
+  APP_INTERCEPTOR,
+} from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
 import configuration from './config/configuration';
 import { validate } from './config/env.validation';
+
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
@@ -35,19 +40,28 @@ import { GuideModule } from './modules/guide/guide.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [configuration], validate }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['apps/api/.env', '.env'],
+      load: [configuration],
+      validate,
+    }),
+
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         uri: config.get<string>('database.url'),
       }),
     }),
+
     ThrottlerModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ([{
-        ttl: config.get<number>('rateLimit.ttl') as number,
-        limit: config.get<number>('rateLimit.max') as number,
-      }]),
+      useFactory: (config: ConfigService) => [
+        {
+          ttl: config.get<number>('rateLimit.ttl') as number,
+          limit: config.get<number>('rateLimit.max') as number,
+        },
+      ],
     }),
 
     HealthModule,
@@ -73,10 +87,20 @@ import { GuideModule } from './modules/guide/guide.module';
     ContactsModule,
     GuideModule,
   ],
+
   providers: [
-    { provide: APP_FILTER, useClass: AllExceptionsFilter },
-    { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}
