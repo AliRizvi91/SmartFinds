@@ -1,0 +1,42 @@
+{
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.git": true,
+    "**/coverage": true,
+    "**/.turbo": true,
+    "**/.cache": true,
+    "**/out": true
+  },
+
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.git": true,
+    "**/coverage": true,
+    "**/.turbo": true,
+    "**/.cache": true,
+    "**/out": true
+  },
+
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.git/**": true,
+    "**/coverage/**": true,
+    "**/.turbo/**": true,
+    "**/.cache/**": true,
+    "**/out/**": true
+  },
+
+  "typescript.tsserver.maxTsServerMemory": 4096,
+
+  "git.autorefresh": false,
+  "git.autofetch": false
+}

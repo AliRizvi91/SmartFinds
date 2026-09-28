@@ -1,0 +1,16 @@
+{
+  "name": "SmartFinds",
+  "short_name": "SmartFinds",
+  "description": "Partnership infrastructure for growth teams.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1C1A",
+  "theme_color": "#0F1C1A",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

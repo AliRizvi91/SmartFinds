@@ -1,0 +1,22 @@
+{
+  "name": "smartfinds",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.30.2",
+  "scripts": {
+    "dev": "pnpm --parallel dev:api dev:web",
+
+    "dev:api": "pnpm --filter @smartfinds/api start:dev",
+    "dev:web": "pnpm --filter @smartfinds/web dev",
+
+    "build": "pnpm -r build",
+
+    "test": "pnpm test:api && pnpm test:web",
+    "test:api": "pnpm --filter @smartfinds/api test",
+    "test:api:e2e": "pnpm --filter @smartfinds/api test:e2e",
+    "test:web": "pnpm --filter @smartfinds/web test",
+
+    "test:all": "pnpm test && pnpm test:api:e2e"
+  }
+
+}
