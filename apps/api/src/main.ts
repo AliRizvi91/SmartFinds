@@ -13,7 +13,13 @@ import {
 
 import { AppModule } from './app.module';
 
-async function bootstrap() {
+let cachedApp: any = null;
+
+export async function createApp() {
+  if (cachedApp) {
+    return cachedApp;
+  }
+
   const app = await NestFactory.create(AppModule);
 
   const config = app.get(ConfigService);
@@ -26,19 +32,19 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: config.get<string>('CORS_ORIGIN'),
+    origin: config.get('CORS_ORIGIN'),
     credentials: true,
   });
 
-  // Global API prefix
+  // API Prefix
   const apiPrefix =
-    config.get<string>('apiPrefix') || 'api';
+    config.get('apiPrefix') || 'api';
 
   app.setGlobalPrefix(apiPrefix);
 
   // API Versioning
   const apiVersion =
-    config.get<string>('apiVersion') || 'v1';
+    config.get('apiVersion') || 'v1';
 
   app.enableVersioning({
     type: VersioningType.URI,
@@ -74,17 +80,46 @@ async function bootstrap() {
 
   SwaggerModule.setup('docs', app, document);
 
-  // Port
+  // Initialize application
+  await app.init();
+
+  cachedApp = app;
+
+  return app;
+}
+
+// Local development
+async function bootstrap() {
+  const app = await createApp();
+
+  const config = app.get(ConfigService);
+
   const port =
-    config.get<number>('port') ||
+    Number(config.get('port')) ||
     Number(process.env.PORT) ||
     3000;
 
-  await app.listen(process.env.PORT || 4000, '0.0.0.0');
+  await app.listen(port);
 
   console.log(
     `SmartFinds API running on port ${port}`,
   );
 }
 
-bootstrap();
+// Don't start a local server on Vercel
+if (process.env.VERCEL !== '1') {
+  bootstrap();
+}
+
+// Vercel Serverless Handler
+export default async function handler(
+  req: any,
+  res: any,
+) {
+  const app = await createApp();
+
+  const httpAdapter = app.getHttpAdapter();
+  const instance = httpAdapter.getInstance();
+
+  return instance(req, res);
+}
