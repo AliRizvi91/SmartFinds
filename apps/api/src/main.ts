@@ -10,25 +10,33 @@ import {
   DocumentBuilder,
   SwaggerModule,
 } from '@nestjs/swagger';
+
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   const config = app.get(ConfigService);
 
+  // Security
   app.use(helmet());
+
+  // Cookies
   app.use(cookieParser());
 
+  // CORS
   app.enableCors({
     origin: config.get<string>('CORS_ORIGIN'),
     credentials: true,
   });
 
+  // Global API prefix
   const apiPrefix =
     config.get<string>('apiPrefix') || 'api';
 
   app.setGlobalPrefix(apiPrefix);
 
+  // API Versioning
   const apiVersion =
     config.get<string>('apiVersion') || 'v1';
 
@@ -37,6 +45,7 @@ async function bootstrap() {
     defaultVersion: apiVersion,
   });
 
+  // Validation
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -48,6 +57,7 @@ async function bootstrap() {
     }),
   );
 
+  // Swagger
   const swaggerConfig = new DocumentBuilder()
     .setTitle('SmartFinds API')
     .setDescription(
@@ -64,9 +74,17 @@ async function bootstrap() {
 
   SwaggerModule.setup('docs', app, document);
 
-  const port = config.get<number>('port') || 4000;
+  // Port
+  const port =
+    config.get<number>('port') ||
+    Number(process.env.PORT) ||
+    3000;
 
   await app.listen(port);
+
+  console.log(
+    `SmartFinds API running on port ${port}`,
+  );
 }
 
 bootstrap();
